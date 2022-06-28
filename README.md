@@ -1,3 +1,3 @@
-#wcrfish-barotrauma
+# wcrfish-barotrauma
 
 This analysis incorporates new data to estimate depth-specific barotrauma mortality rates for West Coast rockfish species. The initial analysis was conducted in 2014 by the Groundfish Management Team to the Pacific Fishery Management Council to estimate depth-specific barotrauma mortality rates for canary rockfish, yelloweye rockfish, and cowcod. This analysis follows the methodology used in 2014 where a heirarchical meta-analysis is applied to estimate barotrauma mortality within each pre-determined depth bin. 
