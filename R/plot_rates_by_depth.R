@@ -9,6 +9,8 @@ plot_rates_by_depth <- function(dir, data, group, ci = "90%")
 
   colvec <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
               "#44AA99", "#999933", "#882255", "#661100", "#0072B2", "#6699CC", "#888888")
+  colvec <- c(colvec, colvec)
+  #colvec <- viridis::viridis(length(n))
 
   png(file.path(dir, paste0('Barotrauma_plot_', group, '.png')), res = 300, units = 'in', width = 8, height = 6)
 
