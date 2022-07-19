@@ -1,8 +1,8 @@
-clean_data <- function(data, 
-					   save_dir){
+clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-barotrauma"){
 
 
 	# do some minor data clean-up #########################################################
+
 	data$Depth.Interval <- data$Depth.Interval.fm
 	fix <- which(data$Depth.Interval. == "20-Oct")
 	data$Depth.Interval[fix] <- "10-20"
@@ -78,12 +78,6 @@ clean_data <- function(data,
 	    # Calculate the long-term mortality prox by guild 
 	    # Only available for deep demersal or deep pelagic from the Wegner study
 	    #
-	    # Deep Demersal Long-Term Mortality
-	    find = which(!is.na(sub_data$X10.Day.Mortality..0...Dead.) & sub_data$Guild == "Deep Demersal")
-	    demersal_lt_mort = round(1 - sum(sub_data$X10.Day.Mortality..0...Dead.[find]) / length(sub_data$X10.Day.Mortality..0...Dead.[find]),2)
-	    # bank rockfish          cowcod starry rockfish sunset rockfish 
-	    #             4              37               2               7 
-	    # 26% long-term mortality
 	    # Deep Pelagic Long-Term Mortality
 	    find = which(!is.na(sub_data$X10.Day.Mortality..0...Dead.) & sub_data$Guild == "Deep Pelagic")
 	    pelagic_lt_mort = round(1 - sum(sub_data$X10.Day.Mortality..0...Dead.[find]) / length(sub_data$X10.Day.Mortality..0...Dead.[find]),2) 
@@ -97,6 +91,14 @@ clean_data <- function(data,
 	    # if data are filtered by Days.Held > 3 days:
 	    # N = 73, 11 dead and 62 alive --> 15% long-term mortality
 	    #
+	   	# Deep Demersal Long-Term Mortality
+	    find = which(!is.na(sub_data$X10.Day.Mortality..0...Dead.) & sub_data$Guild == "Deep Demersal")
+	    demersal_lt_mort = grouped_lt_mort
+	    #round(1 - sum(sub_data$X10.Day.Mortality..0...Dead.[find]) / length(sub_data$X10.Day.Mortality..0...Dead.[find]),2)
+	    # bank rockfish          cowcod starry rockfish sunset rockfish 
+	    #             4              37               2               7 
+	    # 26% long-term mortality
+
 	    # Group Decision: apply the demersal long-term mortality estimate of % to the demersal species
 	    # and apply a demersal + pelagic estimate to the pelagic since there are limited species observations
 	    # in the pelagic group
@@ -105,9 +107,18 @@ clean_data <- function(data,
 	
 	    # Need to find good way to define long-term mortality if we are using both short-term and 
 	    # long-term in the 50-100 fm bin (Hannah + Wegner observations)
-	    demersal_lt_mort = 0.15
-	    pelagic_lt_mort = 0.15
-	    grouped_lt_mort = 0.15
+	    #find = which(sub_data$Guild %in% c("Deep Demersal", "Shallow Demersal") & sub_data$Depth.Bin.fm == "50-100")
+	    #demersal_lt_mort = round(1 - sum(sub_data$alive[find]) / length(find), 2)
+		# 34%
+	    # find = which(sub_data$Guild %in% c("Deep Pelagic", "Shallow Pelagic") & sub_data$Depth.Bin.fm == "50-100")
+	    # pelagic_lt_mort = round(1 - sum(sub_data$alive[find]) / length(find), 2)
+		# 27%
+	    #find = which(!sub_data$Guild %in% c("Dwarf") & sub_data$Depth.Bin.fm == "50-100")
+	    #grouped_lt_mort = round(1 - sum(sub_data$alive[find]) / length(find), 2)
+		# 32%
+	    demersal_lt_mort = 0.26
+	    pelagic_lt_mort  = 0.18
+	    grouped_lt_mort  = 0.18
 	
 	}
 	######################################################################################################
@@ -130,7 +141,14 @@ clean_data <- function(data,
 	tmp$reason = "single_observation"
 	removed_data = rbind(removed_data, tmp)
 	sub_data = sub_data[keep, ]
+	# 
+	# Remove the single quillback observation in the 30-50 bin
+	remove = which(sub_data$Species == "quillback rockfish" & sub_data$Depth.Bin.fm == "30-50")
+	tmp = sub_data[remove,]
+	tmp$reason = "single_observation"
 	#
+	removed_data = rbind(removed_data, tmp)
+	sub_data = sub_data[-remove, ]
 	# Can only retain them if the one observation is a live fish, jags model errors with only a dead observation (yellowtail)
 	# Remove for consistency
 	# 
