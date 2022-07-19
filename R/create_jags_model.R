@@ -1,6 +1,8 @@
 create_jags_model <- function(save_dir){
 	# Create the JAGS model and save
 	# Model4 has mu and eta with beta and gamma or log-normal priors, respectively
+	# dbeta(a, b)
+	# dgamma(shape, rate)
 	Model4 = "
 	    model {
 	      beta.mu ~ dbeta(1,1)
