@@ -47,7 +47,10 @@ hierarchical_plot <- function(dir,
     if(i == Nspecies + 1 | Nspecies == 1) {
       col <- "mupred"
       main <- "Unobserved species  (N = 0)"
-      if (Nspecies == 1) { main <- paste(specs[i],"  (N = ",Nspec,")", sep = "") }
+      if (Nspecies == 1 & i == 1) { 
+        main <- paste(specs[i],"  (N = ",Nspec,")", sep = "") 
+        col = "mu"
+      }
       if (is.na(specs[i])) { main <- "Unobserved species (N = 0)" }
     } else {
       col <- paste("mu[",i,"]", sep = "")
