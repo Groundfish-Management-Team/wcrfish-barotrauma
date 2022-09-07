@@ -23,6 +23,11 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	
 	data$alive_lt <- data$X10.Day.Mortality..0...Dead.
 	data$dead_lt <- 1 - data$X10.Day.Mortality..0...Dead.
+	data$Species_orig <- data$Species
+	# Value in the Days Held column from the raw data file is listed as hours
+	# However, the study retained fish on average of 48 hours and up to 96 hours according to 
+	# the publications.
+	#data[data$Study.Type == "Cage Study - Hannah", "Days.Held"] <- round(data[data$Study.Type == "Cage Study - Hannah", "Days.Held"] / 24, 0)
 	
 	###############################################################################################
 	# There are additional observations in the deep interval (50-100) that come from Hannah
@@ -103,7 +108,30 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	    # and apply a demersal + pelagic estimate to the pelagic since there are limited species observations
 	    # in the pelagic group
 	    # 
-	} else {
+	}
+
+	if (save_dir == file.path(dir, "shortterm")) {
+	
+	    remove = which(sub_data$Study.type == "Accoustic Tagging - Wegner and Hyde" & 
+	        sub_data$Days.Held >= 3)
+	    tmp = sub_data[remove, ]
+	    tmp$reason = "Long_term_mort_50-100"
+	    removed_data = rbind(removed_data, tmp)
+	    sub_data = sub_data[-remove, ]
+	    # 
+	    # Removes 29 fish: 7 bank, 6 bocaccio, 10 cowcod, and 6 sunset 
+	    #                  0 1
+	    #  bank rockfish   0 3
+	    #  bocaccio        1 27
+	    #  cowcod          10 24
+	    #  starry rockfish 0 2
+	    #  sunset rockfish 0 7
+	   	demersal_lt_mort = 0.26
+	    pelagic_lt_mort  = 0.18
+	    grouped_lt_mort  = 0.18
+	}
+
+	if (save_dir == file.path(dir, "analysis_longterm_adj")) {
 	
 	    # Need to find good way to define long-term mortality if we are using both short-term and 
 	    # long-term in the 50-100 fm bin (Hannah + Wegner observations)
@@ -121,6 +149,98 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	    grouped_lt_mort  = 0.18
 	
 	}
+
+	if (save_dir == file.path(dir, "remove_low_n")) {
+
+		# 10 - 30 fathoms
+		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
+			sub_data$Depth.Bin.fm == "0-30"&
+			sub_data$Species == "china rockfish")
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		# 50 - 100 fathoms
+		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
+			sub_data$Depth.Bin.fm == "50-100"&
+			sub_data$Species %in% c("starry rockfish"))
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
+			sub_data$Depth.Bin.fm == "30-50" &
+			sub_data$Species %in% c("copper rockfish", "greenspotted rockfish", "tiger rockfish", 'greenstriped rockfish', 'quillback rockfish', 'rosy rockfish'))
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		
+		#Pelagic
+		# 10 - 30 fathoms
+		remove = which(sub_data$Guild %in% c("Shallow Pelagic", "Deep Pelagic") & 
+			sub_data$Depth.Bin.fm == "0-30"&
+			sub_data$Species == "blue rockfish")
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		# 30 -50 fathoms
+		remove = which(sub_data$Guild %in% c("Shallow Pelagic", "Deep Pelagic") & 
+			sub_data$Depth.Bin.fm == "30-50" &
+			sub_data$Species %in% c("black rockfish", "chilipepper", "olive rockfish", 'yellowtail rockfish'))
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+
+	    demersal_lt_mort = 0.26
+	    pelagic_lt_mort  = 0.18
+	    grouped_lt_mort  = 0.18
+	}
+
+	if (save_dir == file.path(dir, "combine_low_n")) {
+
+		# 10 - 30 fathoms
+		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
+			sub_data$Depth.Bin.fm == "0-30"&
+			sub_data$Species == "china rockfish")
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		# 50 - 100 fathoms
+		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
+			sub_data$Depth.Bin.fm == "50-100"&
+			sub_data$Species %in% c("starry rockfish"))
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		find = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
+			sub_data$Depth.Bin.fm == "30-50" &
+			sub_data$Species %in% c("copper rockfish", "greenspotted rockfish", "tiger rockfish", 'greenstriped rockfish', 'quillback rockfish', 'rosy rockfish'))
+		sub_data[find, "Species"] = "combined rockfish"
+		
+		#Pelagic
+		# 10 - 30 fathoms
+		remove = which(sub_data$Guild %in% c("Shallow Pelagic", "Deep Pelagic") & 
+			sub_data$Depth.Bin.fm == "0-30"&
+			sub_data$Species == "blue rockfish")
+		tmp = sub_data[remove,]
+		tmp$reason = "single_low_species_sample"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		# 30 -50 fathoms
+		find = which(sub_data$Guild %in% c("Shallow Pelagic", "Deep Pelagic") & 
+			sub_data$Depth.Bin.fm == "30-50" &
+			sub_data$Species %in% c("black rockfish", "chilipepper", "olive rockfish", 'yellowtail rockfish'))
+		sub_data[find, "Species"] = "combined rockfish"
+
+	    demersal_lt_mort = 0.26
+	    pelagic_lt_mort  = 0.18
+	    grouped_lt_mort  = 0.18
+	}
 	######################################################################################################
 	#
 	# 10-day survival estimates
@@ -134,24 +254,26 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	# M(1) = 1 - (1 - Short Term Mort.) * (1 - Long Term. Mort.)*(1 - Unaccounted for Mortality)
 	#
 	###########################################################################################
-	# Remove all species with a single observation
-	keep = which(!sub_data$Species %in% c("blue rockfish", "yellowtail rockfish", "greenstriped rockfish", "rosy rockfish",
-	     "freckled rockfish"))
-	tmp = sub_data[-keep,]
-	tmp$reason = "single_observation"
-	removed_data = rbind(removed_data, tmp)
-	sub_data = sub_data[keep, ]
-	# 
-	# Remove the single quillback observation in the 30-50 bin
-	remove = which(sub_data$Species == "quillback rockfish" & sub_data$Depth.Bin.fm == "30-50")
-	tmp = sub_data[remove,]
-	tmp$reason = "single_observation"
-	#
-	removed_data = rbind(removed_data, tmp)
-	sub_data = sub_data[-remove, ]
-	# Can only retain them if the one observation is a live fish, jags model errors with only a dead observation (yellowtail)
-	# Remove for consistency
-	# 
+	if (save_dir != file.path(dir, "combine_low_n") &&
+		save_dir != file.path(dir, "remove_low_n")) {
+		# Remove all species with a single observation
+		keep = which(!sub_data$Species %in% c("blue rockfish", "yellowtail rockfish", "greenstriped rockfish", "rosy rockfish",
+		     "freckled rockfish"))
+		tmp = sub_data[-keep,]
+		tmp$reason = "single_observation"
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[keep, ]
+		# 
+		# Remove the single quillback observation in the 30-50 bin
+		remove = which(sub_data$Species == "quillback rockfish" & sub_data$Depth.Bin.fm == "30-50")
+		tmp = sub_data[remove,]
+		tmp$reason = "single_observation"
+		#
+		removed_data = rbind(removed_data, tmp)
+		sub_data = sub_data[-remove, ]
+		# Can only retain them if the one observation is a live fish, jags model errors with only a dead observation (yellowtail)
+		# Remove for consistency
+	}
 	############################################################################################
 	# Remove observations of black rockfish (N=33) and deacon rockfish (N = 1) from 0-10 fathoms since no
 	# in order to avoid biasing estimates of discard mort from 10-30 fathoms
