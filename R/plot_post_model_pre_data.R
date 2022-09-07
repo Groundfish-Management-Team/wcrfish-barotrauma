@@ -72,7 +72,7 @@ plot_post_model_pre_data <- function(dir, data_list, line_names, Nsim = 1e6,
   axis(1)
 
   hist(mupred, col = 'grey', border = 'grey', breaks = seq(0, 1, 0.01), freq = FALSE, axes = FALSE,
-       xlab = "", ylab = "", main = expression(paste("Derived parameter ", italic(p[total]))))
+       xlab = "", ylab = "", main = expression(paste("Derived parameter ", italic(p[s]))))
   axis(1)
   for(f in 1:length(data_list)){
      lines(density(data_list[[f]]$Jags$BUGSoutput$sims.matrix[, "mupred"], from = 0, to = 1), 

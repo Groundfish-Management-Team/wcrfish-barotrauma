@@ -32,7 +32,7 @@ hierarchical_plot <- function(dir,
 
   specs <- levels(as.factor(dat$Species))
   #Nspecies <- length(specs)
-  N <- ifelse(Nspecies %% 2 == 0, ceiling(Nspecies/2 + 1), ceiling(Nspecies/2))
+  N <- ifelse(Nspecies %% 2 == 0, ceiling(Nspecies / 2 + 1), ceiling(Nspecies / 2))
 
   # plot distributions
   png(paste0(dir, "/", 'Barotrauma_hierarchical_modeling_', filenote, '.png',sep = ''),
@@ -48,13 +48,13 @@ hierarchical_plot <- function(dir,
       col <- "mupred"
       main <- "Unobserved species  (N = 0)"
       if (Nspecies == 1 & i == 1) { 
-        main <- paste(specs[i],"  (N = ",Nspec,")", sep = "") 
+        main <- paste(specs[i],"  (N = ", Nspec, ")", sep = "") 
         col = "mu"
       }
       if (is.na(specs[i])) { main <- "Unobserved species (N = 0)" }
     } else {
       col <- paste("mu[",i,"]", sep = "")
-      main <- paste(specs[i],"  (N = ",Nspec,")", sep = "")
+      main <- paste(specs[i],"  (N = ", Nspec, ")", sep = "")
     }
 
     h1 <- hist(Jags$BUGSoutput$sims.matrix[,col], col = 'grey', border = 'grey',
