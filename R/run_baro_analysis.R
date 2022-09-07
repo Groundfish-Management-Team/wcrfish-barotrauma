@@ -17,7 +17,10 @@ library(binom)
 # set the workding directory
 dir <-  "C:/Assessments/Council/GMT/wcrfish-barotrauma"
 #save_dir <- file.path(dir, "analysis")
-save_dir <- file.path(dir, "analysis_longterm_adj")
+#save_dir <- file.path(dir, "analysis_longterm_adj")
+save_dir <- file.path(dir, "shortterm")
+save_dir <- file.path(dir, "combine_low_n")
+save_dir <- file.path(dir, "remove_low_n")
 
 # load functions
 # function that runs jags and creates distribution plots
@@ -234,11 +237,15 @@ mort_dwarf3050 <- get_mu(data = mod_dwarf3050)
 # Create estimate table
 ###############################################################################################
 if (save_dir == file.path(dir, "analysis")) {
-     plus50_lt_mort = 0
-     plus50_lt_mort_demersal = 0
-} else {
-     plus50_lt_mort = grouped_lt_mort / 2
-     plus50_lt_mort_demersal = demersal_lt_mort / 2
+    plus50_lt_mort = 0
+    plus50_lt_mort_demersal = 0
+} 
+if (save_dir == file.path(dir, "shortterm")) {
+    plus50_lt_mort = grouped_lt_mort
+    plus50_lt_mort_demersal = demersal_lt_mort 
+}else {
+    plus50_lt_mort = grouped_lt_mort / 2
+    plus50_lt_mort_demersal = demersal_lt_mort / 2
 }
 
 # bocaccio 50-100 mort < 30-50 mort - only deep species
