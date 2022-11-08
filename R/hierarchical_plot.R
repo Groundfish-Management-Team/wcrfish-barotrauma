@@ -5,7 +5,8 @@ hierarchical_plot <- function(dir,
                               filenote,
                               titlenote,
                               Nsim = 1e4,
-                              ymax = 7){
+                              ymax = 7,
+                              h_inch = 7){
   
 
   Nburnin <- Nsim
@@ -36,7 +37,7 @@ hierarchical_plot <- function(dir,
 
   # plot distributions
   png(paste0(dir, "/", 'Barotrauma_hierarchical_modeling_', filenote, '.png',sep = ''),
-      width = 7, height = 7,res = 300, units = 'in')
+      width = 7, height = h_inch, res = 300, units = 'in')
   par(mfrow = c(N, 2), mar = c(3, 1, 2, 1), oma = c(2, 2, 5, 0))
 
   for(i in 1:(Nspecies + 1)) {
@@ -58,19 +59,19 @@ hierarchical_plot <- function(dir,
     }
 
     h1 <- hist(Jags$BUGSoutput$sims.matrix[,col], col = 'grey', border = 'grey',
-               breaks = seq(0,1, 0.01), main = main,
+               breaks = seq(0, 1, 0.01), main = main,
                freq = FALSE, ylim = c(0, ymax), xlab = "", ylab = "", axes = FALSE)
 
     axis(1, at = seq(0, 1, 0.2), lab = perc(seq(0, 1, 0.2)))
     est.med <- median(Jags$BUGSoutput$sims.matrix[, col])
     obs.med <- Ndead / Nspec
-    est.90  <- quantile(Jags$BUGSoutput$sims.matrix[, col], 0.9)
+    est.80  <- quantile(Jags$BUGSoutput$sims.matrix[, col], 0.80)
     # add vertical lines
     colvec <- c(1, 2, 4)
     ltyvec <- c(1, 2, 1)
 
     for(iline in 1:3) {
-      x <- c(est.med, obs.med, est.90)[iline]
+      x <- c(est.med, obs.med, est.80)[iline]
       y <- h1$density[abs(x - h1$mids) == min(abs(x - h1$mids))][1]
       if(iline==2) y <- ymax # longer line for thing that isn't related to density
       col <- colvec[iline]
@@ -83,7 +84,7 @@ hierarchical_plot <- function(dir,
     legend('topright', bty = 'n', seg.len = 3,
            legend = c(paste("Mort. obs. =", perc(obs.med)),
                       paste("Mort. est. =",      perc(est.med)),
-                      paste("Mort. 90% CI = ",   perc(est.90))),
+                      paste("Mort. 80th Percentile = ",   perc(est.80))),
            col = colvec[c(2, 1, 3)], lwd = 2, lty = ltyvec[c(2, 1, 3)])
   } #end species loop
 

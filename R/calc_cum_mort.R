@@ -2,7 +2,7 @@
 calc_cum_mort <- function(dir, 
                           dat_list,
                           depth_bins = c("0-30", "30-50", "50-100"),
-                          ci = "90%",
+                          pi = "90%",
                           guild = NULL,
 	                      long_term_mort = 0.15,
 	                      add_mort = 0.05,
@@ -28,14 +28,14 @@ calc_cum_mort <- function(dir,
 	species_mort_ests_ci = as.data.frame(out_matrix)
 	colnames(species_mort_ests_ci)[1:2] = c("species", "depth_bin")
 
-	find = which(colnames(species_mort_ests_ci) == ci)
+	find = which(colnames(species_mort_ests_ci) == pi)
 	cum_mort_est =  1-(1-as.numeric(species_mort_ests_ci[,find]))*(1-long_term_mort)*(1-add_mort)
 	species_mort_ests = cbind(species_mort_ests_ci[,1:2],
 							  species_mort_ests_ci[,find],
 							  long_term_mort,
 							  add_mort,
 							  cum_mort_est)
-	colnames(species_mort_ests)[3] = ci
+	colnames(species_mort_ests)[3] = pi
 
 	# Overwrite the long-term mortality value for the 50+ depth interval to be only additional
 	# unaccounted for mortality

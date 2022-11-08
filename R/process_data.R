@@ -1,5 +1,7 @@
-clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-barotrauma"){
-
+clean_data <- function(data, 
+	analysis, 
+	save_dir,
+	dir="C:/Assessments/Council/GMT/wcrfish-barotrauma"){
 
 	# do some minor data clean-up #########################################################
 
@@ -20,9 +22,13 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	# 0 = dead and 1 = alive
 	data$alive <- data$Mortality..0.Dead.
 	data$dead <- 1 - data$Mortality..0.Dead.
+
+	# Change bocaccio to the demersal group based on SSC feedback
+	find = which(data$Species == "bocaccio")
+	data[find, "Guild"] <- "Deep Demersal"
 	
-	data$alive_lt <- data$X10.Day.Mortality..0...Dead.
-	data$dead_lt <- 1 - data$X10.Day.Mortality..0...Dead.
+	#data$alive_lt <- data$X10.Day.Mortality..0...Dead.
+	#data$dead_lt <- 1 - data$X10.Day.Mortality..0...Dead.
 	data$Species_orig <- data$Species
 	# Value in the Days Held column from the raw data file is listed as hours
 	# However, the study retained fish on average of 48 hours and up to 96 hours according to 
@@ -39,14 +45,17 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	#	
 	# Decision: remove the Wegner observations (represent long-term mortality) from the 30-50 fm depth 
 	# interval and remove the Hannah data for depths > 50 fathoms
-	remove = which(data$Study.type == "Accoustic Tagging - Wegner and Hyde" & 
-	    data$Depth.Bin.fm != "50-100")
-	# Removes 10 fish: 8 bocaccio and 2 cowcod
-	removed_data = data[remove, ]
-	removed_data$reason = "Long_term_mort_30-50"
-	sub_data = data[-remove, ]
+	# remove = which(data$Study.type == "Accoustic Tagging - Wegner and Hyde" & 
+	#     data$Depth.Bin.fm != "50-100")
+	# # Removes 10 fish: 8 bocaccio and 2 cowcod
+	# removed_data = data[remove, ]
+	# removed_data$reason = "Long_term_mort_30-50"
+	# sub_data = data[-remove, ]
+
+	removed_data <- NULL
+	sub_data <- data
 	
-	if (save_dir == file.path(dir, "analysis")) {
+	if (analysis == "analysis") {
 	
 	    remove = which(sub_data$Study.type == "Cage Study - Hannah" & 
 	        sub_data$Depth.Bin.fm == "50-100")
@@ -110,7 +119,7 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	    # 
 	}
 
-	if (save_dir == file.path(dir, "shortterm")) {
+	if (analysis == "shortterm") {
 	
 	    remove = which(sub_data$Study.type == "Accoustic Tagging - Wegner and Hyde" & 
 	        sub_data$Days.Held >= 3)
@@ -131,7 +140,7 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	    grouped_lt_mort  = 0.18
 	}
 
-	if (save_dir == file.path(dir, "analysis_longterm_adj")) {
+	if (analysis == "analysis_longterm_adj") {
 	
 	    # Need to find good way to define long-term mortality if we are using both short-term and 
 	    # long-term in the 50-100 fm bin (Hannah + Wegner observations)
@@ -150,7 +159,7 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	
 	}
 
-	if (save_dir == file.path(dir, "remove_low_n")) {
+	if (analysis == "remove_low_n") {
 
 		# 10 - 30 fathoms
 		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
@@ -161,7 +170,7 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 		removed_data = rbind(removed_data, tmp)
 		sub_data = sub_data[-remove, ]
 		# 50 - 100 fathoms
-		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
+		remove = which(sus_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
 			sub_data$Depth.Bin.fm == "50-100"&
 			sub_data$Species %in% c("starry rockfish"))
 		tmp = sub_data[remove,]
@@ -199,7 +208,7 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	    grouped_lt_mort  = 0.18
 	}
 
-	if (save_dir == file.path(dir, "combine_low_n")) {
+	if (analysis == "combine_low_n") {
 
 		# 10 - 30 fathoms
 		remove = which(sub_data$Guild %in% c("Shallow Demersal", "Deep Demersal") & 
@@ -254,8 +263,8 @@ clean_data <- function(data, save_dir, dir="C:/Assessments/Council/GMT/wcrfish-b
 	# M(1) = 1 - (1 - Short Term Mort.) * (1 - Long Term. Mort.)*(1 - Unaccounted for Mortality)
 	#
 	###########################################################################################
-	if (save_dir != file.path(dir, "combine_low_n") &&
-		save_dir != file.path(dir, "remove_low_n")) {
+	if (analysis != "combine_low_n" &&
+		analysis != "remove_low_n") {
 		# Remove all species with a single observation
 		keep = which(!sub_data$Species %in% c("blue rockfish", "yellowtail rockfish", "greenstriped rockfish", "rosy rockfish",
 		     "freckled rockfish"))

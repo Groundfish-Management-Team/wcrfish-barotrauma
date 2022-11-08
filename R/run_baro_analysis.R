@@ -14,13 +14,20 @@ library(R2jags)
 library(runjags)
 library(binom)
 
+gamma <- "uninformed"
+#gamma <- "informed"
+
+if(gamma == "uninformed"){
+    gamma_prior = c(0.01, 0.01)
+} else {
+    gamma_prior = c(1, 0.1)
+}
+
+analysis <- "analysis_longterm_adj"
+
 # set the workding directory
 dir <-  "C:/Assessments/Council/GMT/wcrfish-barotrauma"
-#save_dir <- file.path(dir, "analysis")
-#save_dir <- file.path(dir, "analysis_longterm_adj")
-save_dir <- file.path(dir, "shortterm")
-save_dir <- file.path(dir, "combine_low_n")
-save_dir <- file.path(dir, "remove_low_n")
+save_dir <- file.path(dir, paste0(gamma, "_gamma"), analysis)
 
 # load functions
 # function that runs jags and creates distribution plots
@@ -35,11 +42,11 @@ source(file.path(dir, "R", "plot_rates_by_depth.R"))
 # load the data from 2022
 baro <- read.csv(file.path(dir, "data", "MortalityData2022.csv"), stringsAsFactors = FALSE)
 
-out = clean_data(data = baro, save_dir = save_dir)
+out = clean_data(data = baro, analysis = analysis, save_dir = save_dir)
 sub_baro = out$sub_data 
-demersal_lt_mort = out$demersal_lt_mort
-pelagic_lt_mort  = out$pelagic_lt_mort 
-grouped_lt_mort  = out$grouped_lt_mort 
+demersal_lt_mort = 0 #out$demersal_lt_mort
+pelagic_lt_mort  = 0 #out$pelagic_lt_mort 
+grouped_lt_mort  = 0 #out$grouped_lt_mort 
 
 ###############################################################################################
 # Options for binning for each guild
@@ -113,7 +120,7 @@ save(pelagic1030,
  
 ##########################################################################################
 
-create_jags_model(save_dir = save_dir)
+create_jags_model(save_dir = save_dir, gamma = gamma)
 
 ##########################################################################################
 # Run JAGS model by guild and depth grouping
@@ -158,7 +165,8 @@ mod_demersal3050 <- hierarchical_plot(dir = save_dir,
                                  filenote = "demersal_30-50",
                                  titlenote = "Demersal 30-50 fathoms",
                                  Nsim = 5e4,
-                                 ymax = 10)
+                                 ymax = 10,
+                                 h_inch = 12)
 
 mod_demersal50plus <- hierarchical_plot(dir = save_dir,
                                  dat = demersal50plus,
@@ -181,7 +189,8 @@ mod_all3050 <- hierarchical_plot(dir = save_dir,
                                  filenote = "combined_demersal_pelagic_30-50",
                                  titlenote = "30-50 fathoms",
                                  Nsim = 5e4,
-                                 ymax = 10)
+                                 ymax = 10,
+                                 h_inch = 14)
 
 mod_all50plus <- hierarchical_plot(dir = save_dir,
                                  dat = all50plus,
@@ -216,7 +225,7 @@ save(mod_pelagic1030,
 
 
 #################################################################################################
-# Calculate the confidence intervals
+# Calculate the Percentiles
 #################################################################################################
 
 mort_pelagic1030   <- get_mu(data = mod_pelagic1030)
@@ -252,7 +261,7 @@ if (save_dir == file.path(dir, "shortterm")) {
 pelagic = calc_cum_mort(dir = save_dir, 
               dat_list = list(mort_pelagic1030, mort_pelagic3050, mort_pelagic50plus),
               depth_bins = c("10-30", "30-50", "50-100"),
-              ci = "90%",
+              pi = "90%",
               guild = "pelagic",
               long_term_mort = grouped_lt_mort,
               add_mort = 0.05, 
@@ -261,7 +270,7 @@ pelagic = calc_cum_mort(dir = save_dir,
 demersal = calc_cum_mort(dir = save_dir, 
               dat_list = list(mort_demersal1030, mort_demersal3050, mort_demersal50plus),
               depth_bins = c("10-30", "30-50", "50-100"),
-              ci = "90%",
+              pi = "90%",
               guild = "demersal",
               long_term_mort = demersal_lt_mort,
               add_mort = 0.05, 
@@ -270,7 +279,7 @@ demersal = calc_cum_mort(dir = save_dir,
 combined = calc_cum_mort(dir = save_dir, 
               dat_list = list(mort_all1030, mort_all3050, mort_all50plus),
               depth_bins = c("10-30", "30-50", "50-100"),
-              ci = "90%",
+              pi = "90%",
               guild = "combined",
               long_term_mort = grouped_lt_mort,
               add_mort = 0.05, 
@@ -280,7 +289,7 @@ combined = calc_cum_mort(dir = save_dir,
 dwarf = calc_cum_mort(dir = save_dir, 
               dat_list = list(mort_dwarf3050),
               depth_bins = c("30-50"),
-              ci = "90%",
+              pi = "90%",
               guild = "dwarf",
               long_term_mort = grouped_lt_mort,
               add_mort = 0.05)
@@ -299,6 +308,7 @@ plot_post_model_pre_data(
   dir = save_dir, 
   data_list = list(mod_pelagic1030, mod_pelagic3050, mod_pelagic50plus), 
   line_names = c("10-30 fathoms", "30-50 fathoms", "50+ fathoms"), 
+  gamma_prior = gamma_prior,
   file_add = "all_pelagic")  
 
 plot_post_model_pre_data(
@@ -306,19 +316,22 @@ plot_post_model_pre_data(
   data_list = list(mod_demersal1030, mod_demersal3050, mod_demersal50plus), 
   line_names = c("10-30 fathoms", "30-50 fathoms", "50+ fathoms"), 
   file_add = "all_demersal",
+  gamma_prior = gamma_prior,
   ymax = 18)
 
 plot_post_model_pre_data(
   dir = save_dir, 
-  data_list = list(mod_all1030, mod_all3050, mod_all50plus), 
-  line_names = c("10-30 fathoms", "30-50 fathoms", "50+ fathoms"), 
+  data_list = list(mod_all1030, mod_all3050, mod_all50plus)[2], 
+  line_names = c("10-30 fathoms", "30-50 fathoms", "50+ fathoms")[2], 
   file_add = "all_combined",
+  gamma_prior = gamma_prior,
   ymax = 18)
 
 plot_post_model_pre_data(
   dir = save_dir, 
   data_list = list(mod_dwarf3050), 
   line_names = c("30-50 fathoms"), 
+  gamma_prior = gamma_prior,
   file_add = "all_dwarf")
 
 #################################################################################################

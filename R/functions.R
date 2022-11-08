@@ -1,7 +1,7 @@
 # Functions
 
 # Function from 2013 file that is was not used in the 2013 code
-confints <- function(qvec = c(0.50, 0.60, 0.75, 0.90, 0.95), Ntotal, Ndead, mult = 0.20){
+confints <- function(qvec = c(0.50, 0.60, 0.70, 0.80, 0.90), Ntotal, Ndead, mult = 0.20){
   Mvec <- rep(NA,length(qvec))
   for(i in 1:length(qvec)) {
     tmp <- binom.confint(x = Ndead * mult, n = Ntotal * mult,
@@ -19,10 +19,10 @@ perc <- function(x, digits = 0){
 
 
 # Get mu quantiles and link to species
-get_mu <- function(data, ci = c(0.5, 0.6, 0.75, 0.9, 0.95)){
+get_mu <- function(data, pi = c(0.5, 0.6, 0.7, 0.8, 0.9)){
 
   find_mu <- grep("mu", colnames(data$Jags$BUGSoutput$sims.matrix))
-  ci_values <- apply(data$Jags$BUGSoutput$sims.matrix[,find_mu[2:length(find_mu)]], 2, quantile, ci)
+  pi_values <- apply(data$Jags$BUGSoutput$sims.matrix[,find_mu[2:length(find_mu)]], 2, quantile, pi)
   
   samps <- data[[2]]
   quants <- NULL
@@ -37,8 +37,8 @@ get_mu <- function(data, ci = c(0.5, 0.6, 0.75, 0.9, 0.95)){
   total_mort <- total_dead / total_n
   quants <- cbind(quants, c(total_dead, total_n, total_mort))
 
-  out <- rbind(ci_values, quants)
+  out <- rbind(pi_values, quants)
   colnames(out) <- c(data$specs, "unobserved")
-  rownames(out)[(length(ci)+1):nrow(out)] = c("dead", "total_samples", "mortality")
+  rownames(out)[(length(pi)+1):nrow(out)] = c("dead", "total_samples", "mortality")
   return(out)
 }
